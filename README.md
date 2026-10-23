@@ -15,44 +15,57 @@ debugging, Maven support, and the test runner). On creation it downloads Maven
 dependencies and plugins, compiles the project, and runs the local tests. The first
 setup needs internet access; no host Java or Maven installation is needed.
 
-In the container's terminal, enter your API key without displaying it:
+After the container finishes setting up, follow the configuration steps below in
+its terminal. The project folder is mounted into the container, so the same
+`config.properties` works on the host and inside VS Code.
+After changing the container configuration, run **Dev Containers: Rebuild Container**.
 
-```bash
-read -rsp 'API key: ' OPENAI_API_KEY
-echo
-export OPENAI_API_KEY
+## Configure and run
+
+Copy the example file in the project root:
+
+```sh
+cp config.properties.example config.properties
+```
+
+Edit `config.properties` and paste your OpenRouter key:
+
+```properties
+OPENAI_API_KEY=your-openrouter-api-key
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_MODEL=openai/gpt-5-mini
+```
+
+Use plain values without quotes. The app reads this UTF-8 file from its current
+working directory. Run from the project root:
+
+```sh
 mvn -q compile exec:java
 ```
 
-For OpenRouter, also set these before starting the app:
+`config.properties` contains your key in plain text and is ignored by Git. Only the
+empty-key example is published. The Linux dev container cannot access macOS
+Keychain; paste your key into the local file on the host or in the container editor.
 
-```bash
-export OPENAI_BASE_URL='https://openrouter.ai/api/v1'
-export OPENAI_MODEL='openai/gpt-5-mini'
+For direct OpenAI, use your OpenAI key with:
+
+```properties
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-5-mini
 ```
 
-The Linux container cannot run macOS's `security` command. Retrieve your key from
-Keychain on the host and enter it at the hidden prompt above. Keys are not baked
-into the container or saved by this setup, and must be set again in a new terminal.
-After changing the container configuration, run **Dev Containers: Rebuild Container**.
+For each setting, a nonblank value in `config.properties` takes precedence over
+the matching environment variable. Missing or blank values fall back to the
+environment, then defaults: OpenAI's base URL and `gpt-5-mini`, or
+`openai/gpt-5-mini` when the base URL points to `openrouter.ai`. The API key is
+required. `.env` files are not loaded. No new library is needed to read properties.
 
-## Run
-
-From this directory, set your API key in the terminal and start the app:
+Environment-only configuration still works if `config.properties` is absent:
 
 ```sh
 export OPENAI_API_KEY='your-api-key'
 mvn -q compile exec:java
-```
-
-The key is read from the environment, never from source code. A `.env` file is not
-automatically loaded. You need an OpenAI API account with model access and billing.
-
-The default model matches the screenshot: `gpt-5-mini`. For the direct OpenAI API,
-omit the screenshot's `openai/` prefix. To use another available Responses model:
-
-```sh
-export OPENAI_MODEL='your-model-id'
 ```
 
 Example conversation:
@@ -70,20 +83,9 @@ Goodbye!
 
 ## OpenRouter
 
-Use the same SDK with OpenRouter's base URL and your OpenRouter key. With the key
-stored in macOS Keychain under service `openrouter`, run:
-
-```sh
-export OPENAI_API_KEY="$(security find-generic-password -a "$USER" -s openrouter -w)"
-export OPENAI_BASE_URL='https://openrouter.ai/api/v1'
-export OPENAI_MODEL='openai/gpt-5-mini'
-mvn -q compile exec:java
-```
-
-`OPENAI_API_KEY` is the SDK's environment variable even when the value is an
-OpenRouter key. Do not enable shell tracing when retrieving credentials.
-For this base URL the app defaults to `openai/gpt-5-mini` if `OPENAI_MODEL` is unset.
-Use the documented provider-prefixed ID rather than relying on a bare alias.
+The example properties file is preconfigured for OpenRouter. Use the documented
+model ID `openai/gpt-5-mini`. `OPENAI_API_KEY` holds your OpenRouter key when the
+base URL points to OpenRouter.
 
 OpenRouter's Responses API is stateless: it rejects `store: true` and non-null
 `previous_response_id`. The app detects `openrouter.ai` and instead sends
@@ -91,9 +93,6 @@ OpenRouter's Responses API is stateless: it rejects `store: true` and non-null
 Only successful turns enter history. `/reset` and restarting clear that history.
 This mode supports the text chatbot; it does not replay tool calls or reasoning items.
 See [OpenRouter Responses API](https://openrouter.ai/docs/api_reference/responses/overview).
-
-To return to OpenAI, unset `OPENAI_BASE_URL`, set `OPENAI_MODEL='gpt-5-mini'`, and
-reload the `openai` Keychain entry into `OPENAI_API_KEY`.
 
 ## How OpenAI memory works
 

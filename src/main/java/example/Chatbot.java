@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.net.URI;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -127,21 +127,20 @@ public final class Chatbot {
     }
 
     public static void main(String[] args) throws IOException {
-        String apiKey = System.getenv("OPENAI_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            System.err.println("Set OPENAI_API_KEY before running the chatbot. See README.md.");
-            System.exit(1);
-        }
-        String baseUrl = System.getenv("OPENAI_BASE_URL");
-        boolean openRouter = baseUrl != null && !baseUrl.isBlank()
-                && "openrouter.ai".equalsIgnoreCase(URI.create(baseUrl).getHost());
-        String model = System.getenv("OPENAI_MODEL");
-        if (model == null || model.isBlank()) {
-            model = openRouter ? "openai/gpt-5-mini" : "gpt-5-mini";
-        }
-        OpenAIClient client = OpenAIOkHttpClient.fromEnv();
+        ChatbotConfig config;
         try {
-            new Chatbot(client, model, openRouter).run(
+            config = ChatbotConfig.load(Path.of("config.properties"), System.getenv());
+        } catch (IllegalArgumentException | IOException exception) {
+            System.err.println("Configuration error: " + exception.getMessage());
+            System.exit(1);
+            return;
+        }
+        OpenAIClient client = OpenAIOkHttpClient.builder()
+                .apiKey(config.apiKey)
+                .baseUrl(config.baseUrl)
+                .build();
+        try {
+            new Chatbot(client, config.model, config.openRouter).run(
                     new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8)),
                     System.out);
         } finally {
