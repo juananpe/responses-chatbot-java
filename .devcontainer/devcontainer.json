@@ -1,0 +1,23 @@
+{
+    "name": "Responses Chatbot (Java 17)",
+    "image": "mcr.microsoft.com/devcontainers/java:3-17-bookworm",
+    "features": {
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "none",
+            "installMaven": true,
+            "mavenVersion": "3.9.11",
+            "installGradle": false
+        }
+    },
+    "remoteUser": "vscode",
+    "customizations": {
+        "vscode": {
+            "extensions": ["vscjava.vscode-java-pack"],
+            "settings": {
+                "java.configuration.updateBuildConfiguration": "automatic",
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "postCreateCommand": "mvn -B -ntp dependency:go-offline test"
+}
