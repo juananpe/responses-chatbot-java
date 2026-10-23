@@ -15,14 +15,17 @@ debugging, Maven support, and the test runner). On creation it downloads Maven
 dependencies and plugins, compiles the project, and runs the local tests. The first
 setup needs internet access; no host Java or Maven installation is needed.
 
-After the container finishes setting up, follow the configuration steps below in
-its terminal. The project folder is mounted into the container, so the same
+The setup also copies `config.properties.example` to `config.properties` if the
+local file is missing, with permissions restricted to its owner. Existing settings
+are preserved when rebuilding. After setup, open `config.properties` and paste your
+API key. The project folder is mounted into the container, so the same
 `config.properties` works on the host and inside VS Code.
 After changing the container configuration, run **Dev Containers: Rebuild Container**.
 
 ## Configure and run
 
-Copy the example file in the project root:
+The dev container creates `config.properties` automatically. When running outside
+the container, copy the example file in the project root once if it is missing:
 
 ```sh
 cp config.properties.example config.properties

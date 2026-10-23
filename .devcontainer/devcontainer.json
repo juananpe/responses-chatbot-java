@@ -19,5 +19,5 @@
             }
         }
     },
-    "postCreateCommand": "mvn -B -ntp dependency:go-offline test"
+    "postCreateCommand": "bash .devcontainer/post-create.sh"
 }
